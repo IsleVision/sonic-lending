@@ -7,15 +7,15 @@ const HeroSection = () => {
         <div className="flex flex-row items-center py-[6px] px-4 rounded-[10px] mb-2"></div>
         <div className="flex flex-row justify-between items-center w-full">
           <h1 className="flex-1 font-semibold text-[42px] text-white text-shadow-white leading-[75px]">
-            Fusion Liquidity Protocol
+            Sonic Liquidity Protocol
           </h1>
         </div>
         <h1 className="font-bold text-[42px] text-white leading-[75px] w-full text-shadow-white">
           Lend, Borrow, Earn Interest
         </h1>
         <p className="font-bold text-white text-shadow-white text-[18px] max-w-[470px] mt-5">
-          A decentralized lending and borrowing protocol. Lend DAI and earn
-          interest in FUSN. Collaterlize ETH and borrow DAI in an
+          A decentralized lending and borrowing protocol. Lend S and earn
+          interest in Sonk. Collaterlize ETH and borrow S in an
           overcollaterlized manner.
         </p>
       </div>

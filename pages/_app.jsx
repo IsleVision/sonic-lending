@@ -7,7 +7,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Fusion Finance</title>
+        <title>Sonk</title>
         <meta
           name="description"
           content="A decentralized DeFi protocol for lending and borrowing"

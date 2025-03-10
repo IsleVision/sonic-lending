@@ -21,7 +21,7 @@ const Navbar = () => {
       <nav className="p-2 shadow-md flex flex-row justify-between items-center bg-primaryBg">
         <Link href="/">
           <a className="ml-12 p-4 font-bold text-2xl text-primary">
-            Fusion<span className="text-secondary">Finance</span>
+            Sonk<span className="text-secondary"></span>
           </a>
         </Link>
         {pageName === "/" && (

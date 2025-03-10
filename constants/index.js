@@ -1,17 +1,22 @@
-const fusionCoreAddress = require("./address/fusionCoreAddress.json");
-const fusionCoreAbi = require("./abi/fusionCoreAbi.json");
+const protocolCoreAddress = require("./address/protocolCoreAddress.json");
+const protocolCoreAbi = require("./abi/protocolCoreAbi.json");
 
-const fusionTokenAddress = require("./address/fusionTokenAddress.json");
-const fusionTokenAbi = require("./abi/fusionTokenAbi.json");
+const sonkTokenAddress = require("./address/sonkTokenAddress.json");
+const sonkTokenAbi = require("./abi/sonkTokenAbi.json");
 
-const daiAddress = require("./address/daiAddress.json");
-const daiAbi = require("./abi/daiAbi.json");
+const sonicAddress = require("./address/sonicAddress.json");
+const sonicAbi = require("./abi/sonicAbi.json");
+
+const ethAddress = require("./address/ethAddress.json");
+const ethAbi = require("./abi/ethAbi.json");
 
 module.exports = {
-  fusionCoreAddress,
-  fusionCoreAbi,
-  fusionTokenAddress,
-  fusionTokenAbi,
-  daiAddress,
-  daiAbi,
+  protocolCoreAddress,
+  protocolCoreAbi,
+  sonkTokenAddress,
+  sonkTokenAbi,
+  sonicAddress,
+  sonicAbi,
+  ethAddress,
+  ethAbi
 };

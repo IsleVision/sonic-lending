@@ -1,8 +1,8 @@
 import React from "react";
 
 const DataSection = ({
-  fusnBalance,
-  daiBalance,
+  sonkBalance,
+  sonicBalance,
   earnedTokens,
   lendingBalance,
   borrowBalance,
@@ -17,10 +17,10 @@ const DataSection = ({
             <span className="text-xs text-white font-medium">100% APY</span>
           </div>
           <div className="text-xl font-semibold text-white">
-            {earnedTokens} FUSN
+            {earnedTokens} Sonk
           </div>
           <div className="text-sm tracking-wide text-gray-500">
-            {lendingBalance} DAI
+            {lendingBalance} S
           </div>
         </div>
 
@@ -30,7 +30,7 @@ const DataSection = ({
             <span className="text-xs text-white font-medium">0.3% fee</span>
           </div>
           <div className="text-xl font-semibold text-white">
-            {borrowBalance} DAI
+            {borrowBalance} S
           </div>
           <div className="text-sm tracking-wide text-gray-500">
             {collateralBalance} Ξ
@@ -42,21 +42,21 @@ const DataSection = ({
         <div className="flex flex-col justify-around">
           <div className="flex items-center gap-x-3 gap-y-3">
             <div className="text-xs text-primary font-medium ">
-              FUSN Wallet Balance
+              Sonk Wallet Balance
             </div>
           </div>
           <div className="text-xl font-semibold text-white">
-            {fusnBalance} FUSN
+            {sonkBalance} Sonk
           </div>
         </div>
         <div className="flex flex-col justify-around">
           <div className="flex items-center gap-x-3 gap-y-3">
             <div className="text-xs text-secondary font-medium ">
-              DAI Wallet Balance
+              Sonic Wallet Balance
             </div>
           </div>
           <div className="text-xl font-semibold text-white">
-            {daiBalance} DAI
+            {sonicBalance} S
           </div>
         </div>
       </div>

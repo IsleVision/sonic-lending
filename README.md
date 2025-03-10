@@ -1,4 +1,4 @@
-# Fusion Finance
+# Sonk
 
 ### Author: [John Nguyen](https://github.com/jooohneth)
 
@@ -57,7 +57,7 @@ A decentralized lending and borrowing protocol for users to lend and borrow Base
   - Base Asset => (ETH price _ ETH collateral) _ borrow rate (70%) - borrower’s amount of borrowed Base Asset, if any .
   - Calculate Liquidation point - get the price of ETH in Base Asset => amount of borrowed Base Asset + liquidation rate (10%).
 
-- FusionToken ($FUSN) contract:
+- SonkToken ($FUSN) contract:
 
   - Type - ERC20 token
   - Max supply - 21 million $FUSN Tokens.

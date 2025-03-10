@@ -3,15 +3,16 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "./FusionToken.sol";
+import "./SonkToken.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-///@notice Main Fusion Finance contract responsible for lending, collateralizing and borrowing
+///@notice Main Sonk contract responsible for lending, collateralizing and borrowing
 ///@author John Nguyen (jooohn.eth)
-contract FusionCore {
+contract ProtocolCore is Ownable{
 
     ///@notice events emitted after each action.
     event Lend(address indexed lender, uint amount);
-    event WithdrawLend(address indexed lender, uint amount);
+    event WithdrawLend(address indexed lender,string token, uint amount);
     event ClaimYield(address indexed lender, uint amount);
     event Collateralize(address indexed borrower, uint amount);
     event WithdrawCollateral(address indexed borrower, uint amount);
@@ -21,7 +22,7 @@ contract FusionCore {
 
     ///@notice mappings needed to keep track of lending
     mapping(address => uint) public lendingBalance;
-    mapping(address => uint) public fusionBalance;
+    mapping(address => uint) public sonkBalance;
     mapping(address => uint) public startTime;
     mapping(address => bool) public isLending;
 
@@ -35,29 +36,34 @@ contract FusionCore {
 
     ///@notice declaring token variables.
     IERC20 public immutable baseAsset;
-    FusionToken public immutable fusionToken;
+    IERC20 public immutable ethAsset;
+    SonkToken public immutable sonkToken;
+    address public ethAggregatorAddress;
+    address public sonicAggregatorAddress;
 
     ///@notice initiating tokens
     ///@param _baseAssetAddress address of base asset token
-    ///@param _fusionAddress address of $FUSN token
-    constructor(IERC20 _baseAssetAddress, FusionToken _fusionAddress, address _aggregatorAddress) {
+    ///@param _sonkAddress address of $FUSN token
+    constructor(IERC20 _baseAssetAddress, IERC20 _ethAssetAddress, SonkToken _sonkAddress,address _ethAggregatorAddress,address _sonicAggregatorAddress) {
         baseAsset = _baseAssetAddress;
-        fusionToken = _fusionAddress;
-        priceFeed = AggregatorV3Interface(_aggregatorAddress);
-    } 
+        ethAsset = _ethAssetAddress;
+        sonkToken = _sonkAddress;
+        ethAggregatorAddress = _ethAggregatorAddress;
+        sonicAggregatorAddress = _sonicAggregatorAddress;
+    }
 
     ///@notice checks if the borrow position has passed the liquidation point
     ///@dev added 'virtual' identifier for MockCore to override
     modifier passedLiquidation(address _borrower) virtual {
-        uint collatAssetPrice = getCollatAssetPrice();
-        require((collatAssetPrice * collateralBalance[_borrower]) / 10 ** 8 <= calculateLiquidationPoint(_borrower), "Position can't be liquidated!");
+//        uint collatAssetPrice = getCollatAssetPrice('Sonic')/getCollatAssetPrice('ETH');
+        require(getCollatAssetPrice(sonicAggregatorAddress)/getCollatAssetPrice(ethAggregatorAddress) * collateralBalance[_borrower]  <= calculateLiquidationPoint(_borrower), "Position can't be liquidated!");
         _;
     }
 
     ///@notice Function to get latest price of ETH in USD
     ///@return collatAssetPrice price of ETH in USD
-    function getCollatAssetPrice() public view returns(uint collatAssetPrice){
-        (,int price,,,) = priceFeed.latestRoundData();
+    function getCollatAssetPrice(address aggregatorAddress ) public view returns(uint collatAssetPrice){
+        (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
         collatAssetPrice = uint(price);
     }
 
@@ -73,15 +79,15 @@ contract FusionCore {
     ///@param _lender address of lender
     ///@return yield amount of $FUSN tokens earned by lender
     function calculateYieldTotal(address _lender) public view returns(uint yield) {
-        uint timeStaked = calculateYieldTime(_lender) * 10**18;
-        yield = (lendingBalance[_lender] * timeStaked / 31536000) / 10**18;
+        uint timeStaked = calculateYieldTime(_lender) ;
+        yield = lendingBalance[_lender] * timeStaked / 31536000;
     }
 
     ///@notice calculates the borrow limit depending on the price of ETH and borrow limit rate.
     ///@return limit current borrow limit for user
     function calculateBorrowLimit(address _borrower) public view returns(uint limit) {
-        uint collatAssetPrice = getCollatAssetPrice();
-        limit = ((((collatAssetPrice * collateralBalance[_borrower]) * 70) / 100)) / 10 ** 8 - borrowBalance[_borrower];
+//        uint collatAssetPrice = getCollatAssetPrice('Sonic')/getCollatAssetPrice('ETH');
+        limit = ((((getCollatAssetPrice(sonicAggregatorAddress)/getCollatAssetPrice(ethAggregatorAddress) * collateralBalance[_borrower]) * 70) / 100)) - borrowBalance[_borrower];
     }
 
     function calculateLiquidationPoint(address _borrower) public view returns(uint point) {
@@ -96,13 +102,14 @@ contract FusionCore {
 
         if(isLending[msg.sender]) {
             uint yield = calculateYieldTotal(msg.sender);
-            fusionBalance[msg.sender] += yield; 
+            sonkBalance[msg.sender] += yield;
         }
 
         lendingBalance[msg.sender] += _amount;
         startTime[msg.sender] = block.timestamp;
         isLending[msg.sender] = true;
 
+//        baseAsset.approve(address (this), _amount);
         require(baseAsset.transferFrom(msg.sender, address(this), _amount), "Transaction failed!");
 
         emit Lend(msg.sender, _amount);
@@ -115,7 +122,7 @@ contract FusionCore {
         require(lendingBalance[msg.sender] >= _amount, "Insufficient lending balance!");
 
         uint yield = calculateYieldTotal(msg.sender);
-        fusionBalance[msg.sender] += yield;
+        sonkBalance[msg.sender] += yield;
         startTime[msg.sender] = block.timestamp;
 
         uint withdrawAmount = _amount;
@@ -126,37 +133,48 @@ contract FusionCore {
             isLending[msg.sender] = false;
         }
 
-        require(baseAsset.transfer(msg.sender, withdrawAmount), "Transaction failed!");
+        if(baseAsset.balanceOf(address(this)) >= withdrawAmount){
+            require(baseAsset.transfer(msg.sender, withdrawAmount), "Transaction failed!");
+            emit WithdrawLend(msg.sender, 'S',withdrawAmount);
+        }
+        else {
+            //when the amount of base asset is not enough, we need to convert to ETH
+            withdrawAmount = getCollatAssetPrice(ethAggregatorAddress)/getCollatAssetPrice(sonicAggregatorAddress)*withdrawAmount;
+            require(ethAsset.transfer(msg.sender, withdrawAmount), "No sufficient fund in the pool!");
+            emit WithdrawLend(msg.sender, 'ETH',withdrawAmount);
+        }
 
-        emit WithdrawLend(msg.sender, withdrawAmount);
     }
     
     ///@notice claims all yield earned by lender.
     function claimYield() external {
         uint yield = calculateYieldTotal(msg.sender);
 
-        require(yield > 0 || fusionBalance[msg.sender] > 0, "No, $FUSN tokens earned!");
+        require(yield > 0 || sonkBalance[msg.sender] > 0, "No, $Sonk tokens earned!");
 
-        if(fusionBalance[msg.sender] != 0) {
-            uint oldYield = fusionBalance[msg.sender];
-            fusionBalance[msg.sender] = 0;
+        if(sonkBalance[msg.sender] != 0) {
+            uint oldYield = sonkBalance[msg.sender];
+            sonkBalance[msg.sender] = 0;
             yield += oldYield;
         }
 
         startTime[msg.sender] = block.timestamp;
-        fusionToken.mint(msg.sender, yield);
+        sonkToken.mint(msg.sender, yield);
 
         emit ClaimYield(msg.sender, yield);
     }
 
     ///@notice collateralizes user's ETH and sets borrow limit
-    function collateralize() external payable {
-        require(msg.value > 0, "Can't collaterlize ETH amount: 0!");
+    function collateralize(uint _amount) external payable {
+        require(_amount > 0, "Can't collaterlize ETH amount: 0!");
+        require(ethAsset.balanceOf(msg.sender) >= _amount, "Insufficient balance!");
 
-        collateralBalance[msg.sender] += msg.value;
+        collateralBalance[msg.sender] += _amount;
 
-        emit Collateralize(msg.sender, msg.value);
-    } 
+//        ethAsset.approve(address(this), _amount);
+        require(ethAsset.transferFrom(msg.sender, address(this), _amount), "Transaction failed!");
+        emit Collateralize(msg.sender, _amount);
+    }
 
     ///@notice withdraw user's collateral ETH and recalculates the borrow limit
     ///@param _amount amount of ETH the user wants to withdraw
@@ -166,9 +184,7 @@ contract FusionCore {
 
         collateralBalance[msg.sender] -= _amount;
 
-        (bool success, ) = msg.sender.call{value: _amount}("");
-        require(success, "Transaction Failed!");
-
+        require(ethAsset.transfer(msg.sender, _amount), "Transaction failed!");
         emit WithdrawCollateral(msg.sender, _amount);
     }
 
@@ -194,7 +210,8 @@ contract FusionCore {
     function repay(uint _amount) external {
         require(isBorrowing[msg.sender], "Can't repay before borrowing!");
         require(baseAsset.balanceOf(msg.sender) >= _amount, "Insufficient funds!");
-        require(_amount > 0 && _amount <= borrowBalance[msg.sender], "Can't repay amount: 0 or more than amount borrowed!");
+        require(_amount > 0 , "Can't repay amount 0!");
+        require(_amount <= borrowBalance[msg.sender], "Can't repay amount more than borrowed!");
 
         if(_amount == borrowBalance[msg.sender]){ 
             isBorrowing[msg.sender] = false;
@@ -202,6 +219,7 @@ contract FusionCore {
 
         borrowBalance[msg.sender] -= _amount;
 
+//        baseAsset.approve(address (this), _amount);
         require(baseAsset.transferFrom(msg.sender, address(this), _amount), "Transaction Failed!");
 
         emit Repay(msg.sender, _amount);
@@ -211,7 +229,7 @@ contract FusionCore {
     ///@param _borrower address of borrower
     ///@dev passedLiquidation modifier checks if the borrow position has passed liquidation point
     ///@dev liquidationReward 1.25% of borrower's ETH collateral
-    function liquidate(address _borrower) external passedLiquidation(_borrower) {
+    function liquidate(address _borrower) external onlyOwner passedLiquidation(_borrower) {
         require(isBorrowing[_borrower], "This address is not borrowing!");
         require(msg.sender != _borrower, "Can't liquidated your own position!");    
 
@@ -221,8 +239,10 @@ contract FusionCore {
         borrowBalance[_borrower] = 0;
         isBorrowing[_borrower] = false;
 
-        (bool success, ) = msg.sender.call{value: liquidationReward}("");
-        require(success, "Transaction Failed!");
+        require(ethAsset.transfer(msg.sender, liquidationReward), "Transaction failed!");
+
+//        (bool success, ) = msg.sender.call{value: liquidationReward}("");
+//        require(success, "Transaction Failed!");
 
         emit Liquidate(msg.sender, liquidationReward, _borrower);
     }
@@ -233,8 +253,8 @@ contract FusionCore {
     }  
 
     ///@notice retuns amount of $FUSN tokens earned
-    function getEarnedFusionTokens(address _lender) external view returns(uint){
-        return fusionBalance[_lender] + calculateYieldTotal(_lender);
+    function getEarnedSonkTokens(address _lender) external view returns(uint){
+        return sonkBalance[_lender] + calculateYieldTotal(_lender);
     }
 
     ///@notice returns amount of base asset lent
@@ -246,6 +266,7 @@ contract FusionCore {
     function getCollateralBalance(address _borrower) external view returns(uint){
         return collateralBalance[_borrower];
     }
+
 
     ///@notice returns borrowing status of borrower
     function getBorrowingStatus(address _borrower) external view returns(bool){

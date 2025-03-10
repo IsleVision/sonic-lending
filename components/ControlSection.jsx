@@ -5,7 +5,7 @@ import Modal from "./Modal.jsx";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
+const ControlSection = ({ coreAddress, coreAbi, sonicAddress, sonicAbi }) => {
   const [showLend, setShowLend] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showBorrow, setShowBorrow] = useState(false);
@@ -63,8 +63,8 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
     e.preventDefault();
     try {
       let amount = ethers.utils.parseEther(tokenAmount);
-      const daiContract = new ethers.Contract(daiAddress, daiAbi, signer);
-      const tx = await daiContract.approve(coreAddress, amount);
+      const sonicContract = new ethers.Contract(sonicAddress, sonicAbi, signer);
+      const tx = await sonicContract.approve(coreAddress, amount);
       pending();
       await tx.wait();
       success();
@@ -183,7 +183,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
           onClick={claimTokens}
           className="py-3.5 rounded-lg w-full bg-secondary text-white text-sm font-semibold"
         >
-          Claim FUSN
+          Claim Sonk
         </button>
       </div>
       <Modal
@@ -193,7 +193,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
         }}
       >
         <div className="p-6 flex items-center justify-center font-semibold text-xl">
-          <div>Lend DAI</div>
+          <div>Lend S</div>
         </div>
         <div className="bg-gray-700 my-3 rounded-md px-6 py-4 text-xl flex justify-between">
           <input
@@ -202,7 +202,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
             placeholder="0.00"
             ref={lendAmount}
           />
-          <div className="text-white">DAI</div>
+          <div className="text-white">S</div>
         </div>
         <div className="p-8">
           {!approvedLend ? (
@@ -233,7 +233,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
         }}
       >
         <div className="p-6 flex items-center justify-center font-semibold text-xl">
-          <div>Withdraw DAI</div>
+          <div>Withdraw S</div>
         </div>
         <div className="bg-gray-700 my-3 rounded-md px-6 py-4 text-xl flex justify-between">
           <input
@@ -242,7 +242,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
             placeholder="0.00"
             ref={withdrawAmount}
           />
-          <div className="text-white">DAI</div>
+          <div className="text-white">S</div>
         </div>
         <div className="p-8">
           <button
@@ -260,7 +260,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
         }}
       >
         <div className="p-6 flex items-center justify-center font-semibold text-xl">
-          <div>Borrow DAI</div>
+          <div>Borrow S</div>
         </div>
         <div className="bg-gray-700 my-3 rounded-md px-6 py-4 text-xl flex justify-between">
           <input
@@ -269,7 +269,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
             placeholder="0.00"
             ref={borrowAmount}
           />
-          <div className="text-white">DAI</div>
+          <div className="text-white">S</div>
         </div>
         <div className="p-8">
           <button
@@ -287,7 +287,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
         }}
       >
         <div className="p-6 flex items-center justify-center font-semibold text-xl">
-          <div>Repay DAI</div>
+          <div>Repay S</div>
         </div>
         <div className="bg-gray-700 my-3 rounded-md px-6 py-4 text-xl flex justify-between">
           <input
@@ -296,7 +296,7 @@ const ControlSection = ({ coreAddress, coreAbi, daiAddress, daiAbi }) => {
             placeholder="0.00"
             ref={repayAmount}
           />
-          <div className="text-white">DAI</div>
+          <div className="text-white">S</div>
         </div>
         <div className="p-8">
           {!approvedRepay ? (

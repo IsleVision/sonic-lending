@@ -9,7 +9,7 @@ const PositionSection = ({ borrowLimit, liquidationPoint }) => {
           <div className="flex gap-x-2 items-start">
             <div className="text-sm font-medium text-white">Borrow Limit: </div>
             <div className="text-sm font-medium text-primary">
-              {borrowLimit} DAI
+              {borrowLimit} S
             </div>
           </div>
           <div className="flex gap-x-2 items-start">

@@ -2,12 +2,14 @@ import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import { useMoralis } from "react-moralis";
 import {
-  fusionCoreAddress,
-  fusionCoreAbi,
-  fusionTokenAddress,
-  fusionTokenAbi,
-  daiAddress,
-  daiAbi,
+  protocolCoreAddress,
+  protocolCoreAbi,
+  sonkTokenAddress,
+  sonkTokenAbi,
+  sonicAddress,
+  sonicAbi,
+  ethAddress,
+  ethAbi
 } from "../constants";
 
 import DataSection from "../components/DataSection.jsx";
@@ -17,8 +19,8 @@ import PositionSection from "../components/PositionSection.jsx";
 import ErrorSection from "../components/ErrorSection.jsx";
 
 export default function App() {
-  const [fusnBalance, setFusnBalance] = useState(0);
-  const [daiBalance, setDaiBalance] = useState(0);
+  const [sonkBalance, setSonkBalance] = useState(0);
+  const [sonicBalance, setSonicBalance] = useState(0);
   const [earnedTokens, setEarnedTokens] = useState(0);
   const [lendingBalance, setLendingBalance] = useState(0);
   const [borrowBalance, setBorrowBalance] = useState(0);
@@ -30,18 +32,19 @@ export default function App() {
   const chainId = parseInt(chainIdHex);
 
   const coreAddress =
-    chainId in fusionCoreAddress ? fusionCoreAddress[chainId] : null;
+    chainId in protocolCoreAddress ? protocolCoreAddress[chainId] : null;
   const tokenAddress =
-    chainId in fusionTokenAddress ? fusionTokenAddress[chainId] : null;
-  const baseAssetAddress = chainId in daiAddress ? daiAddress[chainId] : null;
+    chainId in sonkTokenAddress ? sonkTokenAddress[chainId] : null;
+  const baseAssetAddress = chainId in sonicAddress ? sonicAddress[chainId] : null;
+  const ethAssetAddress = chainId in ethAddress ? ethAddress[chainId] : null;
 
   useEffect(() => {
-    const getFusionBalance = async () => {
+    const getSonkBalance = async () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const tokenContract = new ethers.Contract(
         tokenAddress,
-        fusionTokenAbi,
+        sonkTokenAbi,
         signer
       );
       const address = await signer.getAddress();
@@ -49,29 +52,29 @@ export default function App() {
       const balance = Number.parseFloat(
         ethers.utils.formatEther(rawBalance)
       ).toFixed(3);
-      setFusnBalance(balance);
+      setSonkBalance(balance);
     };
-    const getDaiBalance = async () => {
+    const getSonicBalance = async () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const daiContract = new ethers.Contract(baseAssetAddress, daiAbi, signer);
+      const sonicContract = new ethers.Contract(baseAssetAddress, sonicAbi, signer);
       const address = await signer.getAddress();
-      const rawBalance = await daiContract.balanceOf(address);
+      const rawBalance = await sonicContract.balanceOf(address);
       const balance = Number.parseFloat(
         ethers.utils.formatEther(rawBalance)
       ).toFixed(3);
-      setDaiBalance(balance);
+      setSonicBalance(balance);
     };
     const getEarnedTokens = async () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const coreContract = new ethers.Contract(
         coreAddress,
-        fusionCoreAbi,
+        protocolCoreAbi,
         signer
       );
       const address = await signer.getAddress();
-      const rawEarnedAmount = await coreContract.getEarnedFusionTokens(address);
+      const rawEarnedAmount = await coreContract.getEarnedSonkTokens(address);
       const earnedAmount = Number.parseFloat(
         ethers.utils.formatEther(rawEarnedAmount)
       ).toFixed(3);
@@ -82,11 +85,12 @@ export default function App() {
       const signer = provider.getSigner();
       const coreContract = new ethers.Contract(
         coreAddress,
-        fusionCoreAbi,
+        protocolCoreAbi,
         signer
       );
       const address = await signer.getAddress();
       const rawAmount = await coreContract.getLendingBalance(address);
+      console.log('rawAmount',rawAmount);
       const amount = Number.parseFloat(
         ethers.utils.formatEther(rawAmount)
       ).toFixed(3);
@@ -97,7 +101,7 @@ export default function App() {
       const signer = provider.getSigner();
       const coreContract = new ethers.Contract(
         coreAddress,
-        fusionCoreAbi,
+        protocolCoreAbi,
         signer
       );
       const address = await signer.getAddress();
@@ -112,7 +116,7 @@ export default function App() {
       const signer = provider.getSigner();
       const coreContract = new ethers.Contract(
         coreAddress,
-        fusionCoreAbi,
+        protocolCoreAbi,
         signer
       );
       const address = await signer.getAddress();
@@ -127,7 +131,7 @@ export default function App() {
       const signer = provider.getSigner();
       const coreContract = new ethers.Contract(
         coreAddress,
-        fusionCoreAbi,
+        protocolCoreAbi,
         signer
       );
       const address = await signer.getAddress();
@@ -142,7 +146,7 @@ export default function App() {
       const signer = provider.getSigner();
       const coreContract = new ethers.Contract(
         coreAddress,
-        fusionCoreAbi,
+        protocolCoreAbi,
         signer
       );
       const address = await signer.getAddress();
@@ -153,8 +157,8 @@ export default function App() {
       setLiquidationPoint(amount);
     };
     if (isWeb3Enabled && coreAddress) {
-      getFusionBalance();
-      getDaiBalance();
+      getSonkBalance();
+      getSonicBalance();
       getEarnedTokens();
       getLendingBalance();
       getBorrowBalance();
@@ -180,8 +184,8 @@ export default function App() {
         </header>
         <hr className="border-secondary" />
         <DataSection
-          fusnBalance={fusnBalance}
-          daiBalance={daiBalance}
+          sonkBalance={sonkBalance}
+          sonicBalance={sonicBalance}
           earnedTokens={earnedTokens}
           lendingBalance={lendingBalance}
           borrowBalance={borrowBalance}
@@ -190,15 +194,17 @@ export default function App() {
         <CollateralSection
           collateralBalance={collateralBalance}
           coreAddress={coreAddress}
-          coreAbi={fusionCoreAbi}
+          coreAbi={protocolCoreAbi}
+          ethAddress={ethAssetAddress}
+          ethAbi={ethAbi}
         />
       </main>
       <aside className="flex flex-col gap-y-6 pt-6 pr-6 w-96">
         <ControlSection
           coreAddress={coreAddress}
-          coreAbi={fusionCoreAbi}
-          daiAddress={baseAssetAddress}
-          daiAbi={daiAbi}
+          coreAbi={protocolCoreAbi}
+          sonicAddress={baseAssetAddress}
+          sonicAbi={sonicAbi}
         />
         <PositionSection
           borrowLimit={borrowLimit}

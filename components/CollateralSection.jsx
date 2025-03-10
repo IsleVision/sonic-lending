@@ -5,8 +5,9 @@ import Modal from "./Modal.jsx";
 
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {ethAddress} from "../constants";
 
-const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
+const CollateralSection = ({ collateralBalance, coreAddress, coreAbi, ethAddress, ethAbi }) => {
   const [showCollateralize, setShowCollateralize] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [chainId, setChainId] = useState("");
@@ -19,6 +20,8 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   const coreContract = new ethers.Contract(coreAddress, coreAbi, signer);
+  console.log('ethAddress: ', coreAddress, ethAddress, ethAbi)
+  const ethContract = new ethers.Contract(ethAddress, ethAbi, signer);
 
   useEffect(() => {
     setChainId(parseInt(chainIdHex));
@@ -64,7 +67,10 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
     e.preventDefault();
     try {
       let amount = ethers.utils.parseEther(collatAmount.current.value);
-      const tx = await coreContract.collateralize({ value: amount });
+      let tx = await ethContract.approve(coreAddress, amount);
+      pending();
+      await tx.wait();
+      tx = await coreContract.collateralize( amount);
       pending();
       await tx.wait();
       success();
@@ -109,7 +115,7 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
                 <div className="flex gap-4 items-center">
                   <span className="font-bold text-md">
                     {" "}
-                    {chainId === 5 ? "Ethereum" : "Matic"}{" "}
+                    { "Ethereum" }{" "}
                   </span>
                 </div>
               </td>
@@ -139,7 +145,7 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
         onClose={() => setShowCollateralize(false)}
       >
         <div className="p-6 flex items-center justify-center font-semibold text-xl">
-          <div>Collateralize {chainId === 5 ? "ETH" : "MATIC"}</div>
+          <div>Collateralize {"ETH"}</div>
         </div>
         <div className="bg-gray-700 my-3 rounded-md px-6 py-4 text-xl flex justify-between">
           <input
@@ -148,7 +154,7 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
             placeholder="0.00"
             ref={collatAmount}
           />
-          <div className="text-white">{chainId === 5 ? "ETH" : "MATIC"}</div>
+          <div className="text-white">{"ETH"}</div>
         </div>
         <div className="p-8">
           <button
@@ -161,7 +167,7 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
       </Modal>
       <Modal isVisible={showWithdraw} onClose={() => setShowWithdraw(false)}>
         <div className="p-6 flex items-center justify-center font-semibold text-xl">
-          <div>Withdraw {chainId === 5 ? "ETH" : "MATIC"}</div>
+          <div>Withdraw {"ETH"}</div>
         </div>
         <div className="bg-gray-700 my-3 rounded-md px-6 py-4 text-xl flex justify-between">
           <input
@@ -170,7 +176,7 @@ const CollateralSection = ({ collateralBalance, coreAddress, coreAbi }) => {
             placeholder="0.00"
             ref={withdrawAmount}
           />
-          <div className="text-white">{chainId === 5 ? "ETH" : "MATIC"}</div>
+          <div className="text-white">{ "ETH" }</div>
         </div>
         <div className="p-8">
           <button

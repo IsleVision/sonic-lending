@@ -17,7 +17,7 @@ const ErrorSection = ({ x }) => {
           </h1>
           {!x && (
             <p className="font-bold text-white text-shadow-white text-[18px] max-w-[470px] mt-5">
-              Please, connect to Polygon or Goerli Network!
+              Please, connect to Sonic Network!
             </p>
           )}
         </section>
